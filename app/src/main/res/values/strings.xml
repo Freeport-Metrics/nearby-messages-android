@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Nearby Messages</string>
+    <string name="nearby_publishing">Publishing</string>
+    <string name="nearby_not_publishing">Not publishing</string>
+    <string name="nearby_subscribed">Subscribed</string>
+    <string name="nearby_not_subscribed">Not subscribed</string>
+    <string name="nearby_distance_earshot">Earshot distance</string>
 </resources>
