@@ -46,14 +46,18 @@ public class MainActivity extends AppCompatActivity {
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setVm(nearbyState);
         binding.setAh(nearbyActionHandler);
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Nearby.MESSAGES_API)
+                .addConnectionCallbacks(connectionCallbacks)
+                .enableAutoManage(this, onConnectionFailedListener)
+                .build();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (googleApiClient == null) {
-            connectGoogleApiClient();
-        } else if (!googleApiClient.isConnected()) {
+        if (!googleApiClient.isConnected() && !googleApiClient.isConnecting()) {
             googleApiClient.connect();
         }
     }
@@ -63,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
         if (googleApiClient != null && googleApiClient.isConnected()) {
             unpublish();
             unsubscribe();
-            googleApiClient.disconnect();
         }
         super.onStop();
     }
@@ -97,16 +100,6 @@ public class MainActivity extends AppCompatActivity {
             nearbyState.notifyChange();
         }
     };
-
-    private void connectGoogleApiClient() {
-        if (googleApiClient == null) {
-            googleApiClient = new GoogleApiClient.Builder(this)
-                    .addApi(Nearby.MESSAGES_API)
-                    .addConnectionCallbacks(connectionCallbacks)
-                    .enableAutoManage(this, onConnectionFailedListener)
-                    .build();
-        }
-    }
     //endregion Google API Client
 
     //region Nearby Messages
@@ -260,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private SubscribeOptions getSubscribeOptions() {
-        if(messageFilter == null) {
+        if (messageFilter == null) {
             messageFilter = new MessageFilter.Builder()
                     .includeNamespacedType(MESSAGE_NAMESPACE, MESSAGE_TYPE)
                     .includeEddystoneUids(getString(R.string.secret_eddystone_uid_namespace), getString(R.string.secret_eddystone_uid_instance))
