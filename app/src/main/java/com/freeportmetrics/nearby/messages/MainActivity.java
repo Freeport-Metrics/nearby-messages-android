@@ -28,12 +28,14 @@ import com.google.android.gms.nearby.messages.SubscribeOptions;
 
 import java.util.UUID;
 
+import static com.google.android.gms.nearby.messages.Strategy.TTL_SECONDS_MAX;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private static final int SUBSCRIPTION_EXPIRATION_SECONDS = 30;
-    private static final int PUBLISH_EXPIRATION_SECONDS = 30;
+    private static final int SUBSCRIPTION_EXPIRATION_SECONDS = TTL_SECONDS_MAX; //24h
+    private static final int PUBLISH_EXPIRATION_SECONDS = TTL_SECONDS_MAX; //24h
     private static final String MESSAGE_CONTENT = Build.MANUFACTURER + " " + Build.MODEL;
     private static final String MESSAGE_NAMESPACE = "NAMESPACE";
     private static final String MESSAGE_TYPE = "TYPE";
