@@ -96,7 +96,11 @@
                 android:checked="@={vm.includeBeacons}"
                 android:enabled="@{!vm.publishing &amp;&amp; !vm.subscribed}" />
         </RelativeLayout>
-
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@={vm.message}"
+            android:enabled="@{!vm.publishing &amp;&amp; !vm.subscribed}"/>
 
         <TextView
             android:layout_width="match_parent"

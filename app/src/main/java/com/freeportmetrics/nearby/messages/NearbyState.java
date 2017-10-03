@@ -24,6 +24,8 @@ public class NearbyState extends BaseObservable {
 
     private boolean includeBeacons;
 
+    private String message;
+
     public NearbyState() {
         logs = new ArrayList<>();
     }
@@ -74,5 +76,13 @@ public class NearbyState extends BaseObservable {
 
     public void setIncludeBeacons(boolean includeBeacons) {
         this.includeBeacons = includeBeacons;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

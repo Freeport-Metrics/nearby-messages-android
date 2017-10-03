@@ -39,13 +39,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String MESSAGE_CONTENT = Build.MANUFACTURER + " " + Build.MODEL;
     private static final String MESSAGE_NAMESPACE = "NAMESPACE";
     private static final String MESSAGE_TYPE = "TYPE";
-    private static final Message MESSAGE = new Message(MESSAGE_CONTENT.getBytes(), MESSAGE_NAMESPACE, MESSAGE_TYPE);
 
 
     //region Activity Lifecycle
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        nearbyState.setMessage(MESSAGE_CONTENT);
+
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setVm(nearbyState);
         binding.setAh(nearbyActionHandler);
@@ -158,6 +160,9 @@ public class MainActivity extends AppCompatActivity {
 
     //region Publish
 
+    @Nullable
+    private Message publishedMessage;
+
     private final PublishCallback publishCallback = new PublishCallback() {
         @Override
         public void onExpired() {
@@ -171,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResult(@NonNull Status status) {
             if (status.isSuccess()) {
-                logI("Publishing message: " + new String(MESSAGE.getContent()), true);
+                logI("Publishing message: " + new String(publishedMessage.getContent()), true);
                 nearbyState.setPublishing(true);
             } else {
                 logI("PUBLISH Error: " + status.getStatusMessage(), true);
@@ -185,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResult(@NonNull Status status) {
             if (status.isSuccess()) {
-                logI("Unpublishing message: " + new String(MESSAGE.getContent()), true);
+                logI("Unpublishing message: " + new String(publishedMessage.getContent()), true);
             } else {
                 logI("Unpublishing error: " + status.getStatusMessage(), true);
             }
@@ -196,15 +201,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void publish() {
         logD("Publish requesteed.", true);
+        publishedMessage = new Message(nearbyState.getMessage().getBytes(), MESSAGE_NAMESPACE, MESSAGE_TYPE);
         Nearby.Messages
-                .publish(googleApiClient, MESSAGE, getPublishOptions())
+                .publish(googleApiClient, publishedMessage, getPublishOptions())
                 .setResultCallback(publishResultCallback);
     }
 
     private void unpublish() {
         if (nearbyState.isPublishing()) {
             logI("Unpublishing", true);
-            Nearby.Messages.unpublish(googleApiClient, MESSAGE)
+            Nearby.Messages.unpublish(googleApiClient, publishedMessage)
                     .setResultCallback(unpublishResultCallback);
         }
     }
