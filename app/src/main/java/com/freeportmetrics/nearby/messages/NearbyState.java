@@ -22,6 +22,8 @@ public class NearbyState extends BaseObservable {
 
     private boolean earshotDistance;
 
+    private boolean includeBeacons;
+
     public NearbyState() {
         logs = new ArrayList<>();
     }
@@ -64,5 +66,13 @@ public class NearbyState extends BaseObservable {
 
     public void setEarshotDistance(boolean earshotDistance) {
         this.earshotDistance = earshotDistance;
+    }
+
+    public boolean isIncludeBeacons() {
+        return includeBeacons;
+    }
+
+    public void setIncludeBeacons(boolean includeBeacons) {
+        this.includeBeacons = includeBeacons;
     }
 }

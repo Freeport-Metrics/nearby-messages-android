@@ -5,4 +5,5 @@
     <string name="nearby_subscribed">Subscribed</string>
     <string name="nearby_not_subscribed">Not subscribed</string>
     <string name="nearby_distance_earshot">Earshot distance</string>
+    <string name="nearby_include_beacons">Include beacons</string>
 </resources>

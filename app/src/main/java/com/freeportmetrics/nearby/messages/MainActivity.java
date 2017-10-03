@@ -236,9 +236,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    @Nullable
-    private MessageFilter messageFilter;
-
     private void subscribe() {
         if (!nearbyState.isSubscribed()) {
             logD("Subscribe requested...", true);
@@ -259,17 +256,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private SubscribeOptions getSubscribeOptions() {
-        if (messageFilter == null) {
-            messageFilter = new MessageFilter.Builder()
-                    .includeNamespacedType(MESSAGE_NAMESPACE, MESSAGE_TYPE)
-                    .includeEddystoneUids(getString(R.string.secret_eddystone_uid_namespace), getString(R.string.secret_eddystone_uid_instance))
-                    .includeIBeaconIds(UUID.fromString(getString(R.string.secret_ibeacon_proximityUuid)), null, null)
-                    .build();
+        MessageFilter.Builder messageFilterBuilder = new MessageFilter.Builder();
+        messageFilterBuilder.includeNamespacedType(MESSAGE_NAMESPACE, MESSAGE_TYPE);
+        if (nearbyState.isIncludeBeacons()) {
+            messageFilterBuilder.includeEddystoneUids(getString(R.string.secret_eddystone_uid_namespace), getString(R.string.secret_eddystone_uid_instance))
+                    .includeIBeaconIds(UUID.fromString(getString(R.string.secret_ibeacon_proximityUuid)), null, null);
         }
         return new SubscribeOptions.Builder()
                 .setCallback(subscribeCallback)
                 .setStrategy(getSubscribeStrategy())
-                .setFilter(messageFilter)
+                .setFilter(messageFilterBuilder.build())
                 .build();
     }
 
