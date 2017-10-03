@@ -65,10 +65,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        if (googleApiClient != null && googleApiClient.isConnected()) {
-            unpublish();
-            unsubscribe();
-        }
+        unpublish();
+        unsubscribe();
         super.onStop();
     }
     //endregion Activity Lifecycle
@@ -181,6 +179,19 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private final ResultCallback<Status> unpublishResultCallback = new ResultCallback<Status>() {
+        @Override
+        public void onResult(@NonNull Status status) {
+            if (status.isSuccess()) {
+                logI("Unpublishing message: " + new String(MESSAGE.getContent()), true);
+            } else {
+                logI("Unpublishing error: " + status.getStatusMessage(), true);
+            }
+            nearbyState.setPublishing(false);
+            nearbyState.notifyChange();
+        }
+    };
+
     private void publish() {
         logD("Publish requesteed.", true);
         Nearby.Messages
@@ -191,9 +202,8 @@ public class MainActivity extends AppCompatActivity {
     private void unpublish() {
         if (nearbyState.isPublishing()) {
             logI("Unpublishing", true);
-            nearbyState.setPublishing(false);
-            nearbyState.notifyChange();
-            Nearby.Messages.unpublish(googleApiClient, MESSAGE);
+            Nearby.Messages.unpublish(googleApiClient, MESSAGE)
+                    .setResultCallback(unpublishResultCallback);
         }
     }
 
@@ -222,9 +232,22 @@ public class MainActivity extends AppCompatActivity {
                 logD("Subscribed", true);
                 nearbyState.setSubscribed(true);
             } else {
-                logE("SUBSCRIBE Error: " + status.getStatusMessage(), true);
+                logE("Subscribe error: " + status.getStatusMessage(), true);
                 nearbyState.setSubscribed(false);
             }
+            nearbyState.notifyChange();
+        }
+    };
+
+    private final ResultCallback<Status> unsubscribeResultCallback = new ResultCallback<Status>() {
+        @Override
+        public void onResult(@NonNull Status status) {
+            if (status.isSuccess()) {
+                logD("Unsubscribed", true);
+            } else {
+                logE("Unsubscribe error: " + status.getStatusMessage(), true);
+            }
+            nearbyState.setSubscribed(false);
             nearbyState.notifyChange();
         }
     };
@@ -233,6 +256,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onExpired() {
             logI("Subscribe expired.", true);
+            nearbyState.setSubscribed(false);
+            nearbyState.notifyChange();
         }
     };
 
@@ -251,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             nearbyState.setSubscribed(false);
             nearbyState.notifyChange();
             Nearby.Messages.unsubscribe(googleApiClient, messageListener)
-                    .setResultCallback(subscribeResultCallback);
+                    .setResultCallback(unsubscribeResultCallback);
         }
     }
 
