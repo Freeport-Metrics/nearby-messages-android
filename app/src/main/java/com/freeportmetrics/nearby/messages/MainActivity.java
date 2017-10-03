@@ -14,6 +14,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.nearby.Nearby;
+import com.google.android.gms.nearby.messages.Distance;
 import com.google.android.gms.nearby.messages.EddystoneUid;
 import com.google.android.gms.nearby.messages.IBeaconId;
 import com.google.android.gms.nearby.messages.Message;
@@ -79,14 +80,14 @@ public class MainActivity extends AppCompatActivity {
     private final GoogleApiClient.ConnectionCallbacks connectionCallbacks = new GoogleApiClient.ConnectionCallbacks() {
         @Override
         public void onConnected(@Nullable Bundle bundle) {
-            Log.d(LOG_TAG, "Google API client connected.");
+            logD("Google API client connected.", true);
             nearbyState.setSupported(true);
             nearbyState.notifyChange();
         }
 
         @Override
         public void onConnectionSuspended(int i) {
-            Log.w(LOG_TAG, "Google API client suspended.");
+            logD("Google API client suspended.", true);
             nearbyState.setSupported(false);
             nearbyState.notifyChange();
         }
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private final GoogleApiClient.OnConnectionFailedListener onConnectionFailedListener = new GoogleApiClient.OnConnectionFailedListener() {
         @Override
         public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-            Log.e(LOG_TAG, "Google API client connection failed");
+            logD("Google API client connection failed", true);
             nearbyState.setSupported(false);
             nearbyState.notifyChange();
         }
@@ -107,36 +108,41 @@ public class MainActivity extends AppCompatActivity {
     private final MessageListener messageListener = new MessageListener() {
         @Override
         public void onFound(Message message) {
-            String log = null;
             if (isEddystoneBeacon(message)) {
                 EddystoneUid eddystoneUid = EddystoneUid.from(message);
-                log = "Found Eddystone UID: " + eddystoneUid;
+                logD("Found Eddystone UID: " + eddystoneUid, true);
             } else if (isIBeaconBeacon(message)) {
                 IBeaconId iBeaconId = IBeaconId.from(message);
-                log = "Found iBeacon Id: " + iBeaconId;
+                logD("Found iBeacon Id: " + iBeaconId, true);
             } else {
-                log = "Found message: " + new String(message.getContent());
+                logD("Found message: " + new String(message.getContent()), true);
             }
-            Log.d(LOG_TAG, log);
-            nearbyState.addLog(log);
-            nearbyState.notifyChange();
         }
 
         @Override
         public void onLost(Message message) {
-            String log = null;
             if (isEddystoneBeacon(message)) {
                 EddystoneUid eddystoneUid = EddystoneUid.from(message);
-                log = "Lost Eddystone UID: " + eddystoneUid;
+                logI("Lost Eddystone UID: " + eddystoneUid, true);
             } else if (isIBeaconBeacon(message)) {
                 IBeaconId iBeaconId = IBeaconId.from(message);
-                log = "Found iBeacon Id: " + iBeaconId;
+                logI("Lost iBeacon Id: " + iBeaconId, true);
             } else {
-                log = "Lost message: " + new String(message.getContent());
+                logI("Lost message: " + new String(message.getContent()), true);
             }
-            Log.w(LOG_TAG, log);
-            nearbyState.addLog(log);
-            nearbyState.notifyChange();
+        }
+
+        @Override
+        public void onDistanceChanged(Message message, Distance distance) {
+            if (isEddystoneBeacon(message)) {
+                EddystoneUid eddystoneUid = EddystoneUid.from(message);
+                logD("Distance changed: Eddystone UID: " + eddystoneUid + " " + distance.getMeters() + "m", true);
+            } else if (isIBeaconBeacon(message)) {
+                IBeaconId iBeaconId = IBeaconId.from(message);
+                logD("Distance changed: iBeacon Id: " + iBeaconId + " " + distance.getMeters() + "m", true);
+            } else {
+                logD("Distance changed for message: " + new String(message.getContent()) + " " + distance.getMeters() + "m", true);
+            }
         }
     };
 
@@ -155,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
     private final PublishCallback publishCallback = new PublishCallback() {
         @Override
         public void onExpired() {
-            Log.w(LOG_TAG, "Publish expired.");
+            logI("Publish expired.", true);
             nearbyState.setPublishing(false);
             nearbyState.notifyChange();
         }
@@ -165,10 +171,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResult(@NonNull Status status) {
             if (status.isSuccess()) {
-                Log.d(LOG_TAG, "PUBLISH Success");
+                logI("Publishing message: " + new String(MESSAGE.getContent()), true);
                 nearbyState.setPublishing(true);
             } else {
-                Log.e(LOG_TAG, "PUBLISH Error: " + status.getStatusMessage());
+                logI("PUBLISH Error: " + status.getStatusMessage(), true);
                 nearbyState.setPublishing(false);
             }
             nearbyState.notifyChange();
@@ -176,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void publish() {
-        Log.i(LOG_TAG, "Publishing message: " + new String(MESSAGE.getContent()));
+        logD("Publish requesteed.", true);
         Nearby.Messages
                 .publish(googleApiClient, MESSAGE, getPublishOptions())
                 .setResultCallback(publishResultCallback);
@@ -184,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void unpublish() {
         if (nearbyState.isPublishing()) {
-            Log.i(LOG_TAG, "Unpublishing");
+            logI("Unpublishing", true);
             nearbyState.setPublishing(false);
             nearbyState.notifyChange();
             Nearby.Messages.unpublish(googleApiClient, MESSAGE);
@@ -213,10 +219,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResult(@NonNull Status status) {
             if (status.isSuccess()) {
-                Log.d(LOG_TAG, "SUBSCRIBE Success");
+                logD("Subscribed", true);
                 nearbyState.setSubscribed(true);
             } else {
-                Log.e(LOG_TAG, "SUBSCRIBE Error: " + status.getStatusMessage());
+                logE("SUBSCRIBE Error: " + status.getStatusMessage(), true);
                 nearbyState.setSubscribed(false);
             }
             nearbyState.notifyChange();
@@ -226,9 +232,7 @@ public class MainActivity extends AppCompatActivity {
     private SubscribeCallback subscribeCallback = new SubscribeCallback() {
         @Override
         public void onExpired() {
-            Log.w(LOG_TAG, "Subscribe expired.");
-            nearbyState.setSubscribed(false);
-            nearbyState.notifyChange();
+            logI("Subscribe expired.", true);
         }
     };
 
@@ -236,15 +240,17 @@ public class MainActivity extends AppCompatActivity {
     private MessageFilter messageFilter;
 
     private void subscribe() {
-        Log.i(LOG_TAG, "Subscribing");
-        Nearby.Messages
-                .subscribe(googleApiClient, messageListener, getSubscribeOptions())
-                .setResultCallback(subscribeResultCallback);
+        if (!nearbyState.isSubscribed()) {
+            logD("Subscribe requested...", true);
+            Nearby.Messages
+                    .subscribe(googleApiClient, messageListener, getSubscribeOptions())
+                    .setResultCallback(subscribeResultCallback);
+        }
     }
 
     private void unsubscribe() {
         if (nearbyState.isSubscribed()) {
-            Log.i(LOG_TAG, "Unsubscribing");
+            logD("Unsubscribe requested...", true);
             nearbyState.setSubscribed(false);
             nearbyState.notifyChange();
             Nearby.Messages.unsubscribe(googleApiClient, messageListener)
@@ -309,4 +315,30 @@ public class MainActivity extends AppCompatActivity {
     };
 
     //endregion Databinding
+
+    //region Log
+    private void logD(final String log, final boolean logToScreen) {
+        Log.d(LOG_TAG, log);
+        if (logToScreen) {
+            nearbyState.addLog(log);
+            nearbyState.notifyChange();
+        }
+    }
+
+    private void logI(final String log, final boolean logToScreen) {
+        Log.e(LOG_TAG, log);
+        if (logToScreen) {
+            nearbyState.addLog(log);
+            nearbyState.notifyChange();
+        }
+    }
+
+    private void logE(final String log, final boolean logToScreen) {
+        Log.e(LOG_TAG, log);
+        if (logToScreen) {
+            nearbyState.addLog(log);
+            nearbyState.notifyChange();
+        }
+    }
+    //endregion Log
 }
